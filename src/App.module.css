@@ -1,0 +1,90 @@
+.game {
+  max-width: 900px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: auto minmax(220px, 280px);
+  gap: 18px;
+  align-items: start;
+  justify-content: center;
+}
+
+.boardCol {
+  justify-self: center;
+  width: min(100%, 520px, max(280px, calc((100vh - 230px) * 224 / 240)));
+}
+
+.boardWrap {
+  width: 100%;
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.buttons > * {
+  flex: 1;
+}
+
+.save {
+  margin-top: 10px;
+  min-height: 16px;
+}
+
+.points {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--text-dim);
+}
+
+.points li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 18px;
+}
+
+.squid {
+  color: var(--game-invaders);
+}
+
+.alien {
+  color: var(--text-strong);
+}
+
+.ufo {
+  color: var(--danger);
+}
+
+.setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+@media (max-width: 820px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .boardCol {
+    width: min(100%, 520px);
+  }
+}

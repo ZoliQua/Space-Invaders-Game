@@ -1,0 +1,23 @@
+.canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 224 / 240;
+  background: var(--grid-empty);
+  border: 1px solid var(--panel-border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  image-rendering: pixelated;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.mini {
+  width: auto;
+  height: 92%;
+  border-radius: var(--radius-sm);
+  box-shadow: none;
+  touch-action: auto;
+}
