@@ -6,6 +6,13 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-11-12
+
+### Fixed
+- Landing-page demo rendered blank inside a grid-centred preview box: the mini canvas's percentage height did not
+  resolve, so it fell back to its intrinsic size, which grew with every backing-store resize. The mini canvas is now
+  absolutely positioned inside the demo box.
+
 ## [1.0.0] - 2026-11-08
 
 ### Added
