@@ -44,6 +44,7 @@ Every game is a standalone repo that also plugs into the portal. They share one 
 | 👾 **Space Invaders** (this repo) | [Space-Invaders-Game](https://github.com/ZoliQua/Space-Invaders-Game) | Shooter |
 | 🔴 Connect Four | [Connect-Four-Game](https://github.com/ZoliQua/Connect-Four-Game) | Duel |
 | 🔩 Nut Sort | [Nut-Sort-Game](https://github.com/ZoliQua/Nut-Sort-Game) | Sorting |
+| 🃏 Texas Hold'em | [Texas-Holdem-Game](https://github.com/ZoliQua/Texas-Holdem-Game) | Cards |
 
 ## ✨ Features
 
