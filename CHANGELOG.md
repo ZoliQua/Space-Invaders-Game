@@ -6,28 +6,28 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
-## [1.0.3] — 2026-12-06
+## [1.0.3] — 2026-11-04
 
 ### Changed
 
 - Vendored kit (`src/arcade/`) updated: the registry knows the eleventh arcade game, Texas Hold'em, with its accent colour.
 - README: the Zoltan's Arcade family table lists all eleven games.
 
-## [1.0.2] — 2026-11-22
+## [1.0.2] — 2026-11-01
 
 ### Changed
 
 - Vendored kit (`src/arcade/`) updated: the registry knows the tenth arcade game, Nut Sort, with its accent colour.
 - README: the Zoltan's Arcade family table lists all ten games.
 
-## [1.0.1] - 2026-11-12
+## [1.0.1] - 2026-10-28
 
 ### Fixed
 - Landing-page demo rendered blank inside a grid-centred preview box: the mini canvas's percentage height did not
   resolve, so it fell back to its intrinsic size, which grew with every backing-store resize. The mini canvas is now
   absolutely positioned inside the demo box.
 
-## [1.0.0] - 2026-11-08
+## [1.0.0] - 2026-10-28
 
 ### Added
 - Classic Space Invaders on a fixed 224 × 240 logical playfield: 5 × 11 formation of squids (30), crabs (20) and
