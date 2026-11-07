@@ -106,7 +106,12 @@ function drawText(ctx: CanvasRenderingContext2D, text: string, x: number, y: num
   ctx.fillText(text, x, y);
 }
 
-export type DrawOptions = { mini?: boolean };
+/** Canvas captions, already translated by the caller (English by default). */
+export type CanvasText = { wave: (n: number) => string; ready: string };
+
+const ENGLISH_TEXT: CanvasText = { wave: (n) => `WAVE ${n}`, ready: 'GET READY' };
+
+export type DrawOptions = { mini?: boolean; text?: CanvasText };
 
 /** Paint one frame in logical (224 × 240) coordinates; the caller sets the scale. */
 export function drawGame(ctx: CanvasRenderingContext2D, s: GameState, pal: Palette, opts: DrawOptions = {}): void {
@@ -171,9 +176,10 @@ export function drawGame(ctx: CanvasRenderingContext2D, s: GameState, pal: Palet
   }
 
   if (!opts.mini && s.phase === 'waveClear') {
+    const text = opts.text ?? ENGLISH_TEXT;
     ctx.fillStyle = pal.text;
-    drawText(ctx, `WAVE ${s.wave + 1}`, FIELD_W / 2, 110, 12);
+    drawText(ctx, text.wave(s.wave + 1), FIELD_W / 2, 110, 12);
     ctx.fillStyle = pal.dim;
-    drawText(ctx, 'GET READY', FIELD_W / 2, 126, 8);
+    drawText(ctx, text.ready, FIELD_W / 2, 126, 8);
   }
 }

@@ -11,12 +11,17 @@ import {
 import {
   clearSession,
   formatClock,
+  formatNumber,
+  gameName,
   GameOverlay,
   KeyHelp,
   readString,
   SaveBadge,
   StatPanel,
   useArcadeRun,
+  useKitMessages,
+  useLang,
+  useMessages,
   useRestoredSession,
   useRunTimer,
   useSessionAutosave,
@@ -25,6 +30,7 @@ import {
   type OverlayAction,
   type SessionEnvelope,
 } from './arcade';
+import { MESSAGES, type InvadersMessageKey } from './i18n';
 import { soundCues } from './audio/cues';
 import { InvadersSound } from './audio/sound';
 import { GameCanvas, type GameCanvasHandle } from './components/GameCanvas';
@@ -45,12 +51,12 @@ const SESSION_SCHEMA = 1;
 const SYNC_MS = 100;
 const SOUND_KEY = 'invaders.sound';
 
-const KEYS: [string, string][] = [
-  ['← →', 'Move (or A D)'],
-  ['Space', 'Fire · start'],
-  ['P Esc', 'Pause / resume'],
-  ['R', 'Restart'],
-  ['M', 'Sound on / off'],
+const keyRows = (t: (key: InvadersMessageKey) => string): [string, string][] => [
+  ['← →', t('keyMove')],
+  [t('kbdSpace'), t('keyFire')],
+  ['P Esc', t('keyPause')],
+  ['R', t('keyRestart')],
+  ['M', t('keySound')],
 ];
 
 const POINTS = [
@@ -81,6 +87,11 @@ function hudChanged(a: GameState, b: GameState): boolean {
 
 export function SpaceInvadersGame(props: ArcadeGameProps = {}) {
   const { embedded = false } = props;
+  const t = useMessages(MESSAGES);
+  const k = useKitMessages();
+  const [lang] = useLang();
+  const name = gameName('invaders', lang);
+  const num = (n: number) => formatNumber(n, lang);
   const restored = useRestoredSession<SavedGame>('invaders', SESSION_SCHEMA, isSavedInvaders);
   const [boot] = useState(() => bootState(restored));
   /** React's copy of the run: drives the HUD, overlays and autosave. */
@@ -249,46 +260,50 @@ export function SpaceInvadersGame(props: ArcadeGameProps = {}) {
   let overlay: { title: string; message: string; actions: OverlayAction[] } | null = null;
   if (status === 'idle') {
     overlay = {
-      title: 'Space Invaders',
-      message: `Hold the line against the marching waves. Hide behind the bunkers, shoot down the mystery UFO — a bonus cannon waits at ${EXTRA_LIFE_SCORE.toLocaleString('en-US')} points.`,
-      actions: [{ label: 'Start', onClick: startNewRun, primary: true, kbd: 'Space' }],
+      title: name,
+      message: t('idleBody', { score: num(EXTRA_LIFE_SCORE) }),
+      actions: [{ label: k('start'), onClick: startNewRun, primary: true, kbd: t('kbdSpace') }],
     };
   } else if (status === 'paused') {
     overlay = welcomeBack
       ? {
-          title: 'Welcome back',
-          message: `Your saved run was restored — score ${view.score}, wave ${view.wave}, ${formatClock(seconds)} played.`,
+          title: k('welcomeBack'),
+          message: t('welcomeBody', { score: num(view.score), wave: num(view.wave), time: formatClock(seconds) }),
           actions: [
-            { label: 'Continue', onClick: togglePauseRun, primary: true, kbd: 'P' },
-            { label: 'New game', onClick: startNewRun, kbd: 'R' },
+            { label: t('continue'), onClick: togglePauseRun, primary: true, kbd: 'P' },
+            { label: k('newGame'), onClick: startNewRun, kbd: 'R' },
           ],
         }
       : {
-          title: 'Paused',
-          message: 'Your run is autosaved — you can close the tab and continue later.',
+          title: k('paused'),
+          message: t('pausedBody'),
           actions: [
-            { label: 'Resume', onClick: togglePauseRun, primary: true, kbd: 'P' },
-            { label: 'Restart', onClick: startNewRun, kbd: 'R' },
+            { label: k('resume'), onClick: togglePauseRun, primary: true, kbd: 'P' },
+            { label: k('restart'), onClick: startNewRun, kbd: 'R' },
           ],
         };
   } else if (status === 'gameOver') {
     overlay = {
-      title: 'Game over',
-      message: `${view.invaded ? 'The invaders have landed! ' : ''}Score ${view.score} · Wave ${view.wave} · Best ${best}${newBest ? ' — new best!' : ''}`,
-      actions: [{ label: 'Play again', onClick: startNewRun, primary: true, kbd: 'R' }],
+      title: k('gameOver'),
+      message: `${view.invaded ? `${t('invaded')} ` : ''}${t(newBest ? 'overBodyNewBest' : 'overBody', {
+        score: num(view.score),
+        wave: num(view.wave),
+        best: num(best),
+      })}`,
+      actions: [{ label: t('playAgain'), onClick: startNewRun, primary: true, kbd: 'R' }],
     };
   }
 
   const statusLabel =
-    status !== 'running' ? undefined : view.phase === 'dying' ? 'Hit!' : view.phase === 'waveClear' ? 'Wave clear!' : undefined;
+    status !== 'running' ? undefined : view.phase === 'dying' ? t('hit') : view.phase === 'waveClear' ? t('waveClear') : undefined;
 
   return (
     <div className={`arc-game ${styles.game}`} style={{ '--game-color': 'var(--game-invaders)' } as CSSProperties}>
       {!embedded && (
         <header className="arc-game__head">
           <div>
-            <h1 className="arc-game__title">Space Invaders</h1>
-            <p className="arc-game__sub">Hold the line. Don&apos;t let them land.</p>
+            <h1 className="arc-game__title">{name}</h1>
+            <p className="arc-game__sub">{t('sub')}</p>
           </div>
         </header>
       )}
@@ -297,11 +312,11 @@ export function SpaceInvadersGame(props: ArcadeGameProps = {}) {
         status={status}
         statusLabel={statusLabel}
         items={[
-          { label: 'Score', value: view.score },
-          { label: 'Best', value: best, highlight: newBest },
-          { label: 'Wave', value: view.wave },
-          { label: 'Lives', value: view.lives },
-          { label: 'Time', value: formatClock(seconds) },
+          { label: k('score'), value: num(view.score) },
+          { label: k('best'), value: num(best), highlight: newBest },
+          { label: t('wave'), value: num(view.wave) },
+          { label: t('lives'), value: num(view.lives) },
+          { label: k('time'), value: formatClock(seconds) },
         ]}
       />
 
@@ -316,13 +331,13 @@ export function SpaceInvadersGame(props: ArcadeGameProps = {}) {
 
         <aside className={styles.side}>
           <section className="arc-panel">
-            <h2 className="arc-panel__title">Game</h2>
+            <h2 className="arc-panel__title">{t('panelGame')}</h2>
             <div className={styles.buttons}>
               <button type="button" className="arc-btn arc-btn--primary" onClick={primary}>
-                {status === 'running' ? 'Pause' : status === 'paused' ? 'Resume' : 'Start'}
+                {status === 'running' ? k('pause') : status === 'paused' ? k('resume') : k('start')}
               </button>
               <button type="button" className="arc-btn" onClick={startNewRun} disabled={status === 'idle'}>
-                Restart
+                {k('restart')}
               </button>
             </div>
             <div className={styles.save}>
@@ -331,7 +346,7 @@ export function SpaceInvadersGame(props: ArcadeGameProps = {}) {
           </section>
 
           <section className="arc-panel">
-            <h2 className="arc-panel__title">Points</h2>
+            <h2 className="arc-panel__title">{t('panelPoints')}</h2>
             <ul className={styles.points}>
               {POINTS.map((p) => (
                 <li key={p.label}>
@@ -343,23 +358,23 @@ export function SpaceInvadersGame(props: ArcadeGameProps = {}) {
           </section>
 
           <section className="arc-panel">
-            <h2 className="arc-panel__title">Settings</h2>
+            <h2 className="arc-panel__title">{t('panelSettings')}</h2>
             <div className={styles.setting}>
-              <span id={soundLabelId}>Sound</span>
+              <span id={soundLabelId}>{t('sound')}</span>
               <div className="arc-segmented" role="group" aria-labelledby={soundLabelId}>
                 <button type="button" aria-pressed={soundOn} onClick={() => !soundOn && toggleSound()}>
-                  On
+                  {t('on')}
                 </button>
                 <button type="button" aria-pressed={!soundOn} onClick={() => soundOn && toggleSound()}>
-                  Off
+                  {t('off')}
                 </button>
               </div>
             </div>
           </section>
 
           <section className="arc-panel">
-            <h2 className="arc-panel__title">Keys</h2>
-            <KeyHelp rows={KEYS} />
+            <h2 className="arc-panel__title">{t('panelKeys')}</h2>
+            <KeyHelp rows={keyRows(t)} />
           </section>
         </aside>
       </div>

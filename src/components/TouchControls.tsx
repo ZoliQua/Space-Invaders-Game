@@ -1,4 +1,6 @@
 import type { PointerEvent as ReactPointerEvent } from 'react';
+import { useMessages } from '../arcade';
+import { MESSAGES, type InvadersMessageKey } from '../i18n';
 import styles from './TouchControls.module.css';
 
 export type TouchKey = 'left' | 'right' | 'fire';
@@ -8,10 +10,11 @@ type Props = {
   disabled?: boolean;
 };
 
-const BUTTONS: { key: TouchKey; label: string; text: string }[] = [
-  { key: 'left', label: 'Move left', text: '◀' },
-  { key: 'fire', label: 'Fire', text: 'FIRE' },
-  { key: 'right', label: 'Move right', text: '▶' },
+/** Arrow buttons show a glyph; Fire shows its translated caption. */
+const BUTTONS: { key: TouchKey; label: InvadersMessageKey; glyph?: string }[] = [
+  { key: 'left', label: 'touchLeft', glyph: '◀' },
+  { key: 'fire', label: 'touchFire' },
+  { key: 'right', label: 'touchRight', glyph: '▶' },
 ];
 
 /**
@@ -19,6 +22,7 @@ const BUTTONS: { key: TouchKey; label: string; text: string }[] = [
  * CSS). Pointer capture keeps a press alive while the thumb slides a little.
  */
 export function TouchControls({ onChange, disabled = false }: Props) {
+  const t = useMessages(MESSAGES);
   const press = (key: TouchKey) => (e: ReactPointerEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.currentTarget.setPointerCapture?.(e.pointerId);
@@ -27,13 +31,13 @@ export function TouchControls({ onChange, disabled = false }: Props) {
   const release = (key: TouchKey) => () => onChange(key, false);
 
   return (
-    <div className={styles.touch} role="group" aria-label="Touch controls">
+    <div className={styles.touch} role="group" aria-label={t('touchGroup')}>
       {BUTTONS.map((b) => (
         <button
           key={b.key}
           type="button"
           className={`arc-btn ${b.key === 'fire' ? 'arc-btn--primary' : ''} ${styles.btn}`}
-          aria-label={b.label}
+          aria-label={t(b.label)}
           disabled={disabled}
           onPointerDown={press(b.key)}
           onPointerUp={release(b.key)}
@@ -41,7 +45,7 @@ export function TouchControls({ onChange, disabled = false }: Props) {
           onLostPointerCapture={release(b.key)}
           onContextMenu={(e) => e.preventDefault()}
         >
-          {b.text}
+          {b.glyph ?? t('touchFireText')}
         </button>
       ))}
     </div>
