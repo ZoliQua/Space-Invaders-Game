@@ -7,7 +7,7 @@ import {
   useRef,
   type PointerEvent as ReactPointerEvent,
 } from 'react';
-import { formatNumber, useLang, useMessages } from '../arcade';
+import { formatNumber, useDental, useLang, useMessages } from '../arcade';
 import { MESSAGES } from '../i18n';
 import { FIELD_H, FIELD_W } from '../logic/constants';
 import type { GameState } from '../logic/types';
@@ -52,6 +52,7 @@ export const GameCanvas = forwardRef<GameCanvasHandle, Props>(function GameCanva
   const paletteRef = useRef(palette);
   paletteRef.current = palette;
   const mini = variant === 'mini';
+  const [dental] = useDental();
   const t = useMessages(MESSAGES);
   const [lang] = useLang();
   const text = useMemo<CanvasText>(
@@ -68,9 +69,9 @@ export const GameCanvas = forwardRef<GameCanvasHandle, Props>(function GameCanva
       const scale = canvas.width / FIELD_W;
       ctx.setTransform(scale, 0, 0, scale, 0, 0);
       ctx.imageSmoothingEnabled = false;
-      drawGame(ctx, s, paletteRef.current, { mini, text });
+      drawGame(ctx, s, paletteRef.current, { mini, text, dental });
     },
-    [mini, text],
+    [mini, text, dental],
   );
 
   useImperativeHandle(ref, () => ({ draw: paint }), [paint]);
@@ -117,6 +118,7 @@ export const GameCanvas = forwardRef<GameCanvasHandle, Props>(function GameCanva
       role={mini ? undefined : 'img'}
       aria-label={mini ? undefined : t('playfield')}
       aria-hidden={mini ? true : undefined}
+      data-dental={dental ? 'true' : 'false'}
       onPointerDown={
         onAim
           ? (e) => {

@@ -6,7 +6,7 @@ export type InvadersMessageKey =
   | 'idleBody' | 'welcomeBody' | 'continue' | 'pausedBody' | 'playAgain'
   | 'invaded' | 'overBody' | 'overBodyNewBest'
   | 'panelGame' | 'panelPoints' | 'panelSettings' | 'panelKeys'
-  | 'sound' | 'on' | 'off'
+  | 'sound' | 'on' | 'off' | 'dentalHint'
   | 'playfield' | 'canvasWave' | 'canvasReady'
   | 'touchGroup' | 'touchLeft' | 'touchRight' | 'touchFire' | 'touchFireText'
   | 'kbdSpace'
@@ -33,6 +33,7 @@ export const MESSAGES: Messages<InvadersMessageKey> = {
     panelSettings: 'Settings',
     panelKeys: 'Keys',
     sound: 'Sound',
+    dentalHint: 'Germs instead of invaders, a toothbrush cannon firing toothpaste, teeth as bunkers',
     on: 'On',
     off: 'Off',
     playfield: 'Space Invaders playfield',
@@ -70,6 +71,7 @@ export const MESSAGES: Messages<InvadersMessageKey> = {
     panelSettings: 'Beállítások',
     panelKeys: 'Billentyűk',
     sound: 'Hang',
+    dentalHint: 'Űrlények helyett baktériumok, fogkrémet lövő fogkefe-ágyú, fogak a fedezékek helyén',
     on: 'Be',
     off: 'Ki',
     playfield: 'Space Invaders pálya',
@@ -107,6 +109,7 @@ export const MESSAGES: Messages<InvadersMessageKey> = {
     panelSettings: 'Einstellungen',
     panelKeys: 'Tasten',
     sound: 'Sound',
+    dentalHint: 'Bakterien statt Invasoren, eine Zahnbürsten-Kanone mit Zahnpasta, Zähne als Bunker',
     on: 'An',
     off: 'Aus',
     playfield: 'Space-Invaders-Spielfeld',

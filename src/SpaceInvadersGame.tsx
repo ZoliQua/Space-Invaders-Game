@@ -19,6 +19,7 @@ import {
   SaveBadge,
   StatPanel,
   useArcadeRun,
+  useDental,
   useKitMessages,
   useLang,
   useMessages,
@@ -34,7 +35,8 @@ import { MESSAGES, type InvadersMessageKey } from './i18n';
 import { soundCues } from './audio/cues';
 import { InvadersSound } from './audio/sound';
 import { GameCanvas, type GameCanvasHandle } from './components/GameCanvas';
-import { SpriteIcon } from './components/SpriteIcon';
+import { GERM_FOR } from './components/dentalDraw';
+import { GermIcon, SpriteIcon } from './components/SpriteIcon';
 import { TouchControls, type TouchKey } from './components/TouchControls';
 import { useAnimationFrame } from './hooks/useAnimationFrame';
 import { useInvadersKeyboard } from './hooks/useInvadersKeyboard';
@@ -60,10 +62,10 @@ const keyRows = (t: (key: InvadersMessageKey) => string): [string, string][] => 
 ];
 
 const POINTS = [
-  { mask: ALIEN_SPRITES.squid[0], label: '30', tone: 'squid' },
-  { mask: ALIEN_SPRITES.crab[0], label: '20', tone: 'alien' },
-  { mask: ALIEN_SPRITES.octopus[0], label: '10', tone: 'alien' },
-  { mask: UFO_SPRITE, label: '50 – 300', tone: 'ufo' },
+  { mask: ALIEN_SPRITES.squid[0], label: '30', tone: 'squid', germ: GERM_FOR.squid },
+  { mask: ALIEN_SPRITES.crab[0], label: '20', tone: 'alien', germ: GERM_FOR.crab },
+  { mask: ALIEN_SPRITES.octopus[0], label: '10', tone: 'alien', germ: GERM_FOR.octopus },
+  { mask: UFO_SPRITE, label: '50 – 300', tone: 'ufo', germ: null },
 ] as const;
 
 function bootState(restored: SessionEnvelope<SavedGame> | null): GameState {
@@ -106,6 +108,8 @@ export function SpaceInvadersGame(props: ArcadeGameProps = {}) {
   const [welcomeBack, setWelcomeBack] = useState(restored !== null);
   const [soundOn, setSoundOn] = useState(() => readString(SOUND_KEY) !== 'off');
   const soundLabelId = useId();
+  const dentalHintId = useId();
+  const [dental, setDental] = useDental();
   const soundOnRef = useRef(soundOn);
   soundOnRef.current = soundOn;
 
@@ -350,7 +354,11 @@ export function SpaceInvadersGame(props: ArcadeGameProps = {}) {
             <ul className={styles.points}>
               {POINTS.map((p) => (
                 <li key={p.label}>
-                  <SpriteIcon mask={p.mask} className={styles[p.tone]} />
+                  {dental && p.germ ? (
+                    <GermIcon kind={p.germ} className={styles[p.tone]} />
+                  ) : (
+                    <SpriteIcon mask={p.mask} className={styles[p.tone]} />
+                  )}
                   <span>= {p.label}</span>
                 </li>
               ))}
@@ -370,6 +378,18 @@ export function SpaceInvadersGame(props: ArcadeGameProps = {}) {
                 </button>
               </div>
             </div>
+            <label className={`arc-field ${styles.setting}`}>
+              <span>{k('dental')}</span>
+              <input
+                type="checkbox"
+                checked={dental}
+                aria-describedby={dentalHintId}
+                onChange={(e) => setDental(e.target.checked)}
+              />
+            </label>
+            <p id={dentalHintId} className={styles.settingHint}>
+              {t('dentalHint')}
+            </p>
           </section>
 
           <section className="arc-panel">

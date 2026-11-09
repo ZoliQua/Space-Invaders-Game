@@ -43,7 +43,7 @@ src/
   logic/         # constants, types, sprites, bunkers, formation, rng, game (tick/step), autopilot, persist
   audio/         # sound.ts (Web Audio synth), cues.ts (pure prev/next state → sound cues)
   hooks/         # useAnimationFrame, useInvadersKeyboard, useCanvasPalette
-  components/    # GameCanvas (full + mini), render.ts (drawGame), TouchControls, SpriteIcon
+  components/    # GameCanvas (full + mini), render.ts (drawGame), dentalDraw.ts (dental skin), TouchControls, SpriteIcon (+ GermIcon)
   demo/          # SpaceInvadersDemo — landing-page attract mode
   SpaceInvadersGame.tsx  # embeddable game, ArcadeGameProps
   App.tsx        # standalone page: <ArcadeShell gameId="invaders"><SpaceInvadersGame/></ArcadeShell>

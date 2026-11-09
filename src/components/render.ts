@@ -22,6 +22,9 @@ import {
   type Mask,
 } from '../logic/sprites';
 import type { GameState } from '../logic/types';
+import { drawGerm, drawPasteDrop, drawToothBunker, drawToothbrush, germColor, GERM_FOR } from './dentalDraw';
+
+export { DENTAL_COLORS } from './dentalDraw';
 
 /** Canvas colours, read from the arcade CSS tokens so both themes look right. */
 export type Palette = {
@@ -93,9 +96,10 @@ export function drawMask(ctx: CanvasRenderingContext2D, m: Mask, x: number, y: n
   }
 }
 
-function drawBunkers(ctx: CanvasRenderingContext2D, s: GameState): void {
+function drawBunkers(ctx: CanvasRenderingContext2D, s: GameState, dental: boolean): void {
   s.bunkers.forEach((rows, i) => {
-    drawMask(ctx, { w: BUNKER_W, h: BUNKER_H, rows }, bunkerX(i), BUNKER_Y);
+    if (dental) drawToothBunker(ctx, rows, bunkerX(i), BUNKER_Y);
+    else drawMask(ctx, { w: BUNKER_W, h: BUNKER_H, rows }, bunkerX(i), BUNKER_Y);
   });
 }
 
@@ -111,10 +115,17 @@ export type CanvasText = { wave: (n: number) => string; ready: string };
 
 const ENGLISH_TEXT: CanvasText = { wave: (n) => `WAVE ${n}`, ready: 'GET READY' };
 
-export type DrawOptions = { mini?: boolean; text?: CanvasText };
+export type DrawOptions = {
+  mini?: boolean;
+  text?: CanvasText;
+  /** Dental skin: germs, toothbrush cannon, paste shots, tooth bunkers (same hit boxes). */
+  dental?: boolean;
+};
 
 /** Paint one frame in logical (224 × 240) coordinates; the caller sets the scale. */
 export function drawGame(ctx: CanvasRenderingContext2D, s: GameState, pal: Palette, opts: DrawOptions = {}): void {
+  const dental = opts.dental === true;
+  const cannon = (x: number, y: number) => (dental ? drawToothbrush(ctx, x, y) : drawMask(ctx, PLAYER_SPRITE, x, y));
   ctx.fillStyle = pal.bg;
   ctx.fillRect(0, 0, FIELD_W, FIELD_H);
 
@@ -128,32 +139,45 @@ export function drawGame(ctx: CanvasRenderingContext2D, s: GameState, pal: Palet
   for (let i = 0; i < s.alive.length; i += 1) {
     if (!s.alive[i]) continue;
     const b = alienBox(i, s.fx, s.fy, s.frame);
+    if (dental) {
+      const germ = GERM_FOR[b.kind];
+      drawGerm(ctx, germ, b.x, b.y, s.frame, germColor(germ, pal.squid));
+      continue;
+    }
     ctx.fillStyle = b.kind === 'squid' ? pal.squid : pal.alien;
     drawMask(ctx, b.mask, b.x, b.y);
   }
 
   // Bunkers, cannon, ground.
   ctx.fillStyle = pal.player;
-  drawBunkers(ctx, s);
+  drawBunkers(ctx, s, dental);
+  ctx.fillStyle = pal.player;
   if (s.phase === 'dying') {
     if (s.status !== 'gameOver' || s.lives > 0) {
       drawMask(ctx, PLAYER_EXPLOSION[Math.floor(s.tick / 6) % 2], s.playerX, PLAYER_Y);
     }
   } else {
-    drawMask(ctx, PLAYER_SPRITE, s.playerX, PLAYER_Y);
+    cannon(s.playerX, PLAYER_Y);
   }
+  ctx.fillStyle = pal.player;
   ctx.fillRect(0, GROUND_Y, FIELD_W, 1);
 
   // Reserve cannons under the ground line (full board only).
   if (!opts.mini) {
     const reserve = Math.max(0, s.lives - (s.phase === 'dying' ? 0 : 1));
-    for (let i = 0; i < Math.min(reserve, 8); i += 1) drawMask(ctx, PLAYER_SPRITE, 8 + i * 17, GROUND_Y + 8);
+    for (let i = 0; i < Math.min(reserve, 8); i += 1) {
+      ctx.fillStyle = pal.player;
+      cannon(8 + i * 17, GROUND_Y + 8);
+    }
   }
 
   // Projectiles.
   if (s.shot) {
-    ctx.fillStyle = pal.shot;
-    ctx.fillRect(s.shot.x, s.shot.y, 1, SHOT_H);
+    if (dental) drawPasteDrop(ctx, s.shot.x, s.shot.y, SHOT_H);
+    else {
+      ctx.fillStyle = pal.shot;
+      ctx.fillRect(s.shot.x, s.shot.y, 1, SHOT_H);
+    }
   }
   ctx.fillStyle = pal.bomb;
   for (const b of s.bombs) drawMask(ctx, bombSprite(b.kind, b.age), b.x, b.y);
