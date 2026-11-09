@@ -3,7 +3,7 @@
 ## Project Facts
 
 - **Repository**: https://github.com/ZoliQua/Space-Invaders-Game
-- **Play in the portal**: https://drdul.hu/arcade/#/play/invaders (game id `invaders`)
+- **Play in the portal**: https://dulzoltan.hu/arcade/#/play/invaders (game id `invaders`)
 - **Stack**: React 18, Vite 5, TypeScript 5, CSS Modules; `<canvas>` rendering
 - **Package manager**: npm
 - **Node**: >=20

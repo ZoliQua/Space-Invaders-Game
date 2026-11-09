@@ -1,12 +1,12 @@
 {
   "name": "space-invaders-game",
   "private": true,
-  "version": "1.0.3",
+  "version": "1.1.0",
   "type": "module",
   "description": "Classic Space Invaders in React + Vite + TypeScript — marching alien waves, crumbling bunkers, mystery UFO, autosave & resume, shared Zoltan’s Arcade stats. Part of Arcade-Game-Center.",
   "license": "MIT",
   "author": "Zoltán Dul",
-  "homepage": "https://drdul.hu/arcade/#/play/invaders",
+  "homepage": "https://dulzoltan.hu/arcade/#/play/invaders",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ZoliQua/Space-Invaders-Game.git"

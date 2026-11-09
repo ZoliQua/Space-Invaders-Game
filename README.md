@@ -1,7 +1,7 @@
 # 👾 Space Invaders
 
 A faithful, type-safe Space Invaders built with **React 18**, **Vite** and **TypeScript** — a pixel-art `<canvas>` playfield driven by a pure, fixed-timestep engine, no game framework.
-Runs on its own **and** as one of the games of **[Zoltan's Arcade](https://github.com/ZoliQua/Arcade-Game-Center)** — [play it in the portal](https://drdul.hu/arcade/#/play/invaders).
+Runs on its own **and** as one of the games of **[Zoltan's Arcade](https://github.com/ZoliQua/Arcade-Game-Center)** — [play it in the portal](https://dulzoltan.hu/arcade/#/play/invaders).
 
 [![CI](https://github.com/ZoliQua/Space-Invaders-Game/actions/workflows/ci.yml/badge.svg)](https://github.com/ZoliQua/Space-Invaders-Game/actions/workflows/ci.yml)
 ![license](https://img.shields.io/badge/license-MIT-green)
@@ -61,6 +61,8 @@ Every game is a standalone repo that also plugs into the portal. They share one 
 - 💾 **Autosave & resume** — formation, bunkers, bombs, UFO and RNG are saved; close the tab mid-wave and continue later
 - 🏆 **Unified arcade stats** — best score, plays, total time, shared with the portal
 - 🌗 **Dark / light theme** shared with every arcade game (press **T**); the canvas re-reads its colours on every switch
+- 🌍 **Three languages** — English, Hungarian and German; switch in the top bar or in the settings (also `?lang=en|hu|de` for link hand-off); numbers follow the locale's grouping
+- 🦷 **Dental mode** — a „Fogas mód” / "Dental mode" / „Zahnmodus” toggle in the settings, off by default (or `?dental=1`), shared across the whole arcade: the invaders are bacteria, the cannon a toothbrush shooting toothpaste, and the bunkers are teeth that erode like caries; presentation only
 - 🤖 **Attract-mode demo** (`<SpaceInvadersDemo />`) — the real engine flown by an autopilot that aims, fires and dodges
 - 🧪 **Tested** — 58 Vitest tests: engine rules, collisions, autopilot, save validator, component and demo tests
 
