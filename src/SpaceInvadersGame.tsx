@@ -13,13 +13,19 @@ import {
   formatClock,
   formatNumber,
   gameName,
+  FinishButton,
+  FullscreenButton,
   GameOverlay,
   KeyHelp,
   readString,
+  RulesButton,
   SaveBadge,
   StatPanel,
+  TouchHelp,
+  TouchPad,
   useArcadeRun,
   useDental,
+  useImmersive,
   useKitMessages,
   useLang,
   useMessages,
@@ -37,9 +43,9 @@ import { InvadersSound } from './audio/sound';
 import { GameCanvas, type GameCanvasHandle } from './components/GameCanvas';
 import { GERM_FOR } from './components/dentalDraw';
 import { GermIcon, SpriteIcon } from './components/SpriteIcon';
-import { TouchControls, type TouchKey } from './components/TouchControls';
 import { useAnimationFrame } from './hooks/useAnimationFrame';
 import { useInvadersKeyboard } from './hooks/useInvadersKeyboard';
+import { useRulesSections } from './rules';
 import { EXTRA_LIFE_SCORE, PLAYER_W } from './logic/constants';
 import { createInitialState, NO_INPUT, step, togglePause } from './logic/game';
 import { fromSaved, isSavedInvaders, toSaved, type SavedGame } from './logic/persist';
@@ -52,6 +58,8 @@ const SESSION_SCHEMA = 1;
 /** The React snapshot (HUD, overlay, autosave) is refreshed at least this often while playing. */
 const SYNC_MS = 100;
 const SOUND_KEY = 'invaders.sound';
+/** A Fire press keeps the cannon firing this long; the pad repeats every 150 ms, so holding it never lets go. */
+const FIRE_HOLD_MS = 200;
 
 const keyRows = (t: (key: InvadersMessageKey) => string): [string, string][] => [
   ['← →', t('keyMove')],
@@ -104,6 +112,12 @@ export function SpaceInvadersGame(props: ArcadeGameProps = {}) {
   const inputRef = useRef<Input>({ ...NO_INPUT });
   const canvasRef = useRef<GameCanvasHandle>(null);
   const soundRef = useRef<InvadersSound | null>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const fireTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const immersive = useImmersive(rootRef);
+  const rulesSections = useRulesSections();
+  // The Finish confirm is open: the simulation and the clock stand still without leaving `running`.
+  const [finishOpen, setFinishOpen] = useState(false);
   const [runId, setRunId] = useState(0);
   const [welcomeBack, setWelcomeBack] = useState(restored !== null);
   const [soundOn, setSoundOn] = useState(() => readString(SOUND_KEY) !== 'off');
@@ -114,7 +128,8 @@ export function SpaceInvadersGame(props: ArcadeGameProps = {}) {
   soundOnRef.current = soundOn;
 
   const status = view.status;
-  const seconds = useRunTimer(status === 'running', runId, runId === 0 ? (restored?.seconds ?? 0) : 0);
+  const live = status === 'running' && !finishOpen;
+  const seconds = useRunTimer(live, runId, runId === 0 ? (restored?.seconds ?? 0) : 0);
 
   // Waves repeat forever, so a run only ends by losing (score attack).
   const stats = useArcadeRun({
@@ -123,7 +138,7 @@ export function SpaceInvadersGame(props: ArcadeGameProps = {}) {
     score: view.score,
     seconds,
     runKey: runId,
-    outcome: 'over',
+    outcome: () => (view.finishedEarly ? 'finished' : 'over'),
     props,
   });
 
@@ -170,7 +185,7 @@ export function SpaceInvadersGame(props: ArcadeGameProps = {}) {
     }
   }, []);
 
-  useAnimationFrame(status === 'running', onFrame);
+  useAnimationFrame(live, onFrame);
 
   useEffect(() => {
     if (status !== 'running') soundRef.current?.setUfo(false);
@@ -245,18 +260,51 @@ export function SpaceInvadersGame(props: ArcadeGameProps = {}) {
     onToggleSound: toggleSound,
   });
 
-  const onAim = useCallback((x: number | null, firing: boolean) => {
+  /** Pointer steering; `firing` is null for touch (the Fire button fires, a finger only moves). */
+  const onAim = useCallback((x: number | null, firing: boolean | null) => {
     const input = inputRef.current;
     if (liveRef.current.status !== 'running') return;
     input.targetX = x === null ? null : x - PLAYER_W / 2;
-    input.fire = firing;
+    if (firing !== null) input.fire = firing;
   }, []);
 
   const readLive = useCallback(() => liveRef.current, []);
 
-  const onTouch = useCallback((key: TouchKey, pressed: boolean) => {
-    inputRef.current[key] = pressed;
+  /** Fire pad press (repeated every 150 ms while held): fire now, stop shortly after the last press. */
+  const onFirePress = useCallback(() => {
+    if (liveRef.current.status !== 'running') return;
+    inputRef.current.fire = true;
+    if (fireTimerRef.current !== null) clearTimeout(fireTimerRef.current);
+    fireTimerRef.current = setTimeout(() => {
+      fireTimerRef.current = null;
+      inputRef.current.fire = false;
+    }, FIRE_HOLD_MS);
   }, []);
+
+  useEffect(
+    () => () => {
+      if (fireTimerRef.current !== null) clearTimeout(fireTimerRef.current);
+    },
+    [],
+  );
+
+  const openRules = useCallback(
+    (open: boolean) => {
+      if (open && liveRef.current.status === 'running') {
+        releaseInput(inputRef);
+        commit(togglePause(liveRef.current));
+      }
+    },
+    [commit],
+  );
+
+  const finishEarly = useCallback(() => {
+    const s = liveRef.current;
+    if (s.status !== 'running' && s.status !== 'paused') return;
+    setWelcomeBack(false);
+    releaseInput(inputRef);
+    commit({ ...s, status: 'gameOver', finishedEarly: true });
+  }, [commit]);
 
   const best = Math.max(stats.best, view.score);
   const newBest = view.score > 0 && view.score > stats.bestBeforeRun;
@@ -288,8 +336,8 @@ export function SpaceInvadersGame(props: ArcadeGameProps = {}) {
         };
   } else if (status === 'gameOver') {
     overlay = {
-      title: k('gameOver'),
-      message: `${view.invaded ? `${t('invaded')} ` : ''}${t(newBest ? 'overBodyNewBest' : 'overBody', {
+      title: view.finishedEarly ? k('finishedEarly') : k('gameOver'),
+      message: `${view.invaded && !view.finishedEarly ? `${t('invaded')} ` : ''}${t(newBest ? 'overBodyNewBest' : 'overBody', {
         score: num(view.score),
         wave: num(view.wave),
         best: num(best),
@@ -302,7 +350,7 @@ export function SpaceInvadersGame(props: ArcadeGameProps = {}) {
     status !== 'running' ? undefined : view.phase === 'dying' ? t('hit') : view.phase === 'waveClear' ? t('waveClear') : undefined;
 
   return (
-    <div className={`arc-game ${styles.game}`} style={{ '--game-color': 'var(--game-invaders)' } as CSSProperties}>
+    <div ref={rootRef} className={`arc-game ${styles.game}`} style={{ '--game-color': 'var(--game-invaders)' } as CSSProperties}>
       {!embedded && (
         <header className="arc-game__head">
           <div>
@@ -326,11 +374,14 @@ export function SpaceInvadersGame(props: ArcadeGameProps = {}) {
 
       <div className={styles.layout}>
         <div className={styles.boardCol}>
-          <div className={`arc-game__board ${styles.boardWrap}`}>
+          <div className={`arc-game__board arc-board-touch ${styles.boardWrap}`}>
             <GameCanvas ref={canvasRef} state={view} source={readLive} onAim={onAim} />
             {overlay && <GameOverlay {...overlay} />}
           </div>
-          <TouchControls onChange={onTouch} disabled={status !== 'running'} />
+          <TouchPad
+            layout="row"
+            buttons={[{ id: 'fire', icon: '✦', label: t('touchFire'), onPress: onFirePress, repeat: true }]}
+          />
         </div>
 
         <aside className={styles.side}>
@@ -343,6 +394,11 @@ export function SpaceInvadersGame(props: ArcadeGameProps = {}) {
               <button type="button" className="arc-btn" onClick={startNewRun} disabled={status === 'idle'}>
                 {k('restart')}
               </button>
+            </div>
+            <div className={styles.tools}>
+              <RulesButton sections={rulesSections} gameId="invaders" onOpenChange={openRules} hotkey={false} />
+              <FinishButton score={view.score} visible={inProgress} onFinish={finishEarly} onOpenChange={setFinishOpen} />
+              <FullscreenButton immersive={immersive} />
             </div>
             <div className={styles.save}>
               <SaveBadge savedAt={inProgress ? savedAt : null} onDiscard={discardSave} />
@@ -395,6 +451,12 @@ export function SpaceInvadersGame(props: ArcadeGameProps = {}) {
           <section className="arc-panel">
             <h2 className="arc-panel__title">{t('panelKeys')}</h2>
             <KeyHelp rows={keyRows(t)} />
+            <TouchHelp
+              rows={[
+                [t('touchDrag'), t('touchDragAction')],
+                [t('touchHold'), t('touchHoldAction')],
+              ]}
+            />
           </section>
         </aside>
       </div>

@@ -5,6 +5,7 @@ import { MESSAGES } from './i18n';
 import { createInitialState } from './logic/game';
 import { toSaved, type SavedGame } from './logic/persist';
 import { SpaceInvadersGame } from './SpaceInvadersGame';
+import { setCoarsePointer } from './test/touchEnv';
 
 /** A stand-in 2D context: jsdom has no canvas; we only record what is drawn. */
 function fakeContext() {
@@ -45,6 +46,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers();
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
   localStorage.clear();
 });
 
@@ -72,6 +74,7 @@ describe('Space Invaders messages', () => {
 
 describe('<SpaceInvadersGame /> in other languages', () => {
   it('shows the German start overlay after applyLang("de")', () => {
+    setCoarsePointer(true);
     applyLang('de');
     render(<SpaceInvadersGame />);
     const dialog = screen.getByRole('dialog', { name: 'Space Invaders' });

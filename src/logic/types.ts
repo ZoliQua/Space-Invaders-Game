@@ -49,6 +49,8 @@ export type GameState = {
   extraLifeAwarded: boolean;
   /** True when the run ended because the aliens landed. */
   invaded: boolean;
+  /** The player ended the run with Finish; ranks the current score. */
+  finishedEarly?: boolean;
 
   /** Left edge of the cannon. */
   playerX: number;

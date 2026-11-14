@@ -32,9 +32,9 @@ type Props = {
   variant?: 'full' | 'mini';
   /**
    * Pointer steering in logical x (null when released) and whether the
-   * pointer is held down (fires).
+   * pointer is held down (a mouse fires; a touch only steers and reports null).
    */
-  onAim?: (x: number | null, firing: boolean) => void;
+  onAim?: (x: number | null, firing: boolean | null) => void;
 };
 
 /**
@@ -106,8 +106,9 @@ export const GameCanvas = forwardRef<GameCanvasHandle, Props>(function GameCanva
   const aim = (e: ReactPointerEvent<HTMLCanvasElement>, firing: boolean) => {
     const rect = e.currentTarget.getBoundingClientRect();
     if (rect.width <= 0) return;
-    onAim?.(((e.clientX - rect.left) / rect.width) * FIELD_W, firing);
+    onAim?.(((e.clientX - rect.left) / rect.width) * FIELD_W, e.pointerType === 'touch' ? null : firing);
   };
+  const release = (e: ReactPointerEvent<HTMLCanvasElement>) => onAim?.(null, e.pointerType === 'touch' ? null : false);
 
   return (
     <canvas
@@ -128,8 +129,8 @@ export const GameCanvas = forwardRef<GameCanvasHandle, Props>(function GameCanva
           : undefined
       }
       onPointerMove={onAim ? (e) => e.buttons !== 0 && aim(e, true) : undefined}
-      onPointerUp={onAim ? () => onAim(null, false) : undefined}
-      onPointerCancel={onAim ? () => onAim(null, false) : undefined}
+      onPointerUp={onAim ? release : undefined}
+      onPointerCancel={onAim ? release : undefined}
       onContextMenu={onAim ? (e) => e.preventDefault() : undefined}
     />
   );
