@@ -6,6 +6,20 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.2.0] — 2026-11-14
+
+### Added
+
+- Rules dialog with a diagram of the points per invader row (opening it pauses the run).
+- Finish early: ends the run on purpose and ranks the current score ("Finished early" on the game-over card).
+- Touch controls: drag on the playfield to move the cannon and a Fire button that keeps firing while held; the layout fits 360 px portrait phones.
+- Full-screen button (CSS full-screen mode on iPhone); `viewport-fit=cover` for the notch.
+- README in English, German and Hungarian; the family table lists all fifteen games, including Snapszer.
+
+### Changed
+
+- The left / right touch buttons are gone: a finger on the playfield only steers (it no longer fires); a mouse still fires while pressed.
+
 ## [1.1.1] — 2026-11-14
 
 ### Changed

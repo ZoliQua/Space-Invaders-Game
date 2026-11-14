@@ -1,7 +1,9 @@
 # 👾 Space Invaders
 
+**English** · [Deutsch](README.de.md) · [Magyar](README.hu.md)
+
 A faithful, type-safe Space Invaders built with **React 18**, **Vite** and **TypeScript** — a pixel-art `<canvas>` playfield driven by a pure, fixed-timestep engine, no game framework.
-Runs on its own **and** as one of the games of **[Zoltan's Arcade](https://github.com/ZoliQua/Arcade-Game-Center)** — [play it in the portal](https://dulzoltan.hu/arcade/#/play/invaders).
+Runs on its own **and** as one of the fifteen games of **[Zoltan's Arcade](https://github.com/ZoliQua/Arcade-Game-Center)** — [play it in the portal](https://dulzoltan.hu/arcade/#/play/invaders).
 
 [![CI](https://github.com/ZoliQua/Space-Invaders-Game/actions/workflows/ci.yml/badge.svg)](https://github.com/ZoliQua/Space-Invaders-Game/actions/workflows/ci.yml)
 ![license](https://img.shields.io/badge/license-MIT-green)
@@ -48,6 +50,7 @@ Every game is a standalone repo that also plugs into the portal. They share one 
 | 💣 Minesweeper | [Minesweeper-Game](https://github.com/ZoliQua/Minesweeper-Game) | Logic |
 | ♠️ Solitaire | [Solitaire-Game](https://github.com/ZoliQua/Solitaire-Game) | Cards |
 | 🎴 Ulti | [Ulti-Game](https://github.com/ZoliQua/Ulti-Game) | Cards |
+| 🂡 Snapszer | [Snapszer-Game](https://github.com/ZoliQua/Snapszer-Game) | Cards |
 
 ## ✨ Features
 
@@ -60,14 +63,17 @@ Every game is a standalone repo that also plugs into the portal. They share one 
 - 🎯 **Pixel-precise collisions**, sub-stepped so nothing tunnels through anything
 - ⏱️ **Fixed-timestep, deterministic engine** — `step(state, dtMs, input)` with a seeded RNG in the state
 - 🔊 **Synthesised sound** (Web Audio): the four-note march, shots, explosions, UFO warble — with a Sound toggle
-- 📱 **Touch controls** — on-screen ◀ FIRE ▶ buttons on touch screens, or drag on the playfield to steer and hold to fire
+- 📱 **Touch play** — drag on the playfield to move the cannon, a **Fire** button that auto-fires while held; the layout fits 360 px phones
+- 📖 **Rules dialog** with a diagram of the points per invader row (opening it pauses the run)
+- 🏁 **Finish early** — end a run on purpose and put the current score on the leaderboard
+- ⛶ **Full screen** button (CSS full-screen mode on iPhone)
 - 💾 **Autosave & resume** — formation, bunkers, bombs, UFO and RNG are saved; close the tab mid-wave and continue later
 - 🏆 **Unified arcade stats** — best score, plays, total time, shared with the portal
 - 🌗 **Dark / light theme** shared with every arcade game (press **T**); the canvas re-reads its colours on every switch
 - 🌍 **Three languages** — English, Hungarian and German; switch in the top bar or in the settings (also `?lang=en|hu|de` for link hand-off); numbers follow the locale's grouping
 - 🦷 **Dental mode** — a „Fogas mód” / "Dental mode" / „Zahnmodus” toggle in the settings, off by default (or `?dental=1`), shared across the whole arcade: the invaders are bacteria, the cannon a toothbrush shooting toothpaste, and the bunkers are teeth that erode like caries; presentation only
 - 🤖 **Attract-mode demo** (`<SpaceInvadersDemo />`) — the real engine flown by an autopilot that aims, fires and dodges
-- 🧪 **Tested** — 58 Vitest tests: engine rules, collisions, autopilot, save validator, component and demo tests
+- 🧪 **Tested** — 86 Vitest tests: engine rules, collisions, autopilot, save validator, component and demo tests
 
 ## 🚀 Quick start
 
@@ -93,9 +99,11 @@ Production build: `npm run build && npm run preview`. The build uses relative as
 | **M** | Sound on / off |
 | **T** | Toggle dark / light theme (standalone page) |
 
-On touch screens three hold-to-act buttons appear under the playfield. With any pointer you can also press on the
-playfield: the cannon slides under your finger and fires while you hold. Only **one shot** can be on screen at a time —
-as in the original, a miss costs you time. The game pauses itself when the tab is hidden.
+With a mouse you can also press on the playfield: the cannon slides under the pointer and fires while you hold. Only **one shot** can be on screen at a time —
+as in the original, a miss costs you time. The game pauses itself when the tab is hidden. The **Rules**, **Finish** and **Full screen** buttons are in the Game panel.
+
+**On a phone:** drag your finger along the playfield to move the cannon and hold the **Fire** button under it to keep shooting (a tap fires one shot; both thumbs work at once).
+The **Rules** button opens the rules with a points diagram, **Finish** ranks your current score, **Full screen** hides the browser bars. On iPhone, add the page to the Home Screen for a view without browser bars.
 
 ## 🎯 Scoring & stats
 
@@ -116,7 +124,7 @@ each starting one row lower (capped after five) and marching and bombing a littl
 | Ticks per march beat (55 aliens) | 44 | 40 | 36 | 32 | 28 | 24 |
 
 When a run ends the kit records it once in `localStorage` under `arcade.stats.invaders`
-(`best`, `plays`, `wins`, `totalScore`, `totalSeconds`, `lastScore`, `lastPlayedAt`) with outcome `over` (score attack).
+(`best`, `plays`, `wins`, `totalScore`, `totalSeconds`, `lastScore`, `lastPlayedAt`) with outcome `over` (score attack), or `finished` when the run was ended early with **Finish** (the score on screen is ranked, 0 included).
 
 ## 💾 Autosave & resume
 
@@ -134,7 +142,7 @@ import { SpaceInvadersGame, SpaceInvadersDemo } from '@arcade/invaders';
 
 <SpaceInvadersGame
   embedded                                   // hide the page title; the portal shows it
-  onGameOver={(score) => submitScore('invaders', score)}
+  onGameOver={(score, info) => submitScore('invaders', score)}   // info.finished: ended early with Finish
   onStatusChange={({ status, score, seconds }) => updateHeader(status, seconds)}
 />
 <SpaceInvadersDemo active={cardIsVisible} />  // landing-page attract mode
@@ -203,7 +211,8 @@ src/
     persist.ts             compact save format + strict validator
   audio/                   Web Audio synth (sound.ts) and pure state → cue mapping (cues.ts)
   hooks/                   useAnimationFrame, useInvadersKeyboard, useCanvasPalette
-  components/              GameCanvas (full + mini), render.ts, TouchControls, SpriteIcon
+  components/              GameCanvas (full + mini), render.ts, SpriteIcon
+  rules.tsx                Rules dialog content and diagram
   demo/SpaceInvadersDemo.tsx  landing-page attract mode
   SpaceInvadersGame.tsx    the embeddable game (ArcadeGameProps)
   App.tsx                  standalone page: <ArcadeShell><SpaceInvadersGame/></ArcadeShell>
