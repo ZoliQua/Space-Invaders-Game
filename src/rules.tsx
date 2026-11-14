@@ -27,7 +27,13 @@ export function WaveDiagram() {
     <svg
       viewBox="0 0 240 124"
       role="img"
-      aria-label={m('rulesDiagramLabel')}
+      aria-label={m('rulesDiagramLabel', {
+        squid: num(ALIEN_POINTS.squid),
+        crab: num(ALIEN_POINTS.crab),
+        octopus: num(ALIEN_POINTS.octopus),
+        ufoMin: num(UFO_POINTS[0]),
+        ufoMax: num(UFO_POINTS[UFO_POINTS.length - 1]),
+      })}
       style={{ width: '100%', maxWidth: 300, height: 'auto', display: 'block', margin: '8px auto' }}
     >
       {ROWS.map(({ kind, rows }, i) => {

@@ -46,7 +46,8 @@ import { GermIcon, SpriteIcon } from './components/SpriteIcon';
 import { useAnimationFrame } from './hooks/useAnimationFrame';
 import { useInvadersKeyboard } from './hooks/useInvadersKeyboard';
 import { useRulesSections } from './rules';
-import { EXTRA_LIFE_SCORE, PLAYER_W } from './logic/constants';
+import { EXTRA_LIFE_SCORE, PLAYER_W, UFO_POINTS } from './logic/constants';
+import { ALIEN_POINTS } from './logic/formation';
 import { createInitialState, NO_INPUT, step, togglePause } from './logic/game';
 import { fromSaved, isSavedInvaders, toSaved, type SavedGame } from './logic/persist';
 import { ALIEN_SPRITES, UFO_SPRITE } from './logic/sprites';
@@ -59,7 +60,7 @@ const SESSION_SCHEMA = 1;
 const SYNC_MS = 100;
 const SOUND_KEY = 'invaders.sound';
 /** A Fire press keeps the cannon firing this long; the pad repeats every 150 ms, so holding it never lets go. */
-const FIRE_HOLD_MS = 200;
+const FIRE_HOLD_MS = 160;
 
 const keyRows = (t: (key: InvadersMessageKey) => string): [string, string][] => [
   ['← →', t('keyMove')],
@@ -70,10 +71,10 @@ const keyRows = (t: (key: InvadersMessageKey) => string): [string, string][] => 
 ];
 
 const POINTS = [
-  { mask: ALIEN_SPRITES.squid[0], label: '30', tone: 'squid', germ: GERM_FOR.squid },
-  { mask: ALIEN_SPRITES.crab[0], label: '20', tone: 'alien', germ: GERM_FOR.crab },
-  { mask: ALIEN_SPRITES.octopus[0], label: '10', tone: 'alien', germ: GERM_FOR.octopus },
-  { mask: UFO_SPRITE, label: '50 – 300', tone: 'ufo', germ: null },
+  { mask: ALIEN_SPRITES.squid[0], value: ALIEN_POINTS.squid, tone: 'squid', germ: GERM_FOR.squid },
+  { mask: ALIEN_SPRITES.crab[0], value: ALIEN_POINTS.crab, tone: 'alien', germ: GERM_FOR.crab },
+  { mask: ALIEN_SPRITES.octopus[0], value: ALIEN_POINTS.octopus, tone: 'alien', germ: GERM_FOR.octopus },
+  { mask: UFO_SPRITE, value: null, tone: 'ufo', germ: null },
 ] as const;
 
 function bootState(restored: SessionEnvelope<SavedGame> | null): GameState {
@@ -270,7 +271,7 @@ export function SpaceInvadersGame(props: ArcadeGameProps = {}) {
 
   const readLive = useCallback(() => liveRef.current, []);
 
-  /** Fire pad press (repeated every 150 ms while held): fire now, stop shortly after the last press. */
+  /** Fire pad press (repeated every 150 ms while held): fire now, stop right after the last press. */
   const onFirePress = useCallback(() => {
     if (liveRef.current.status !== 'running') return;
     inputRef.current.fire = true;
@@ -409,13 +410,13 @@ export function SpaceInvadersGame(props: ArcadeGameProps = {}) {
             <h2 className="arc-panel__title">{t('panelPoints')}</h2>
             <ul className={styles.points}>
               {POINTS.map((p) => (
-                <li key={p.label}>
+                <li key={p.tone + String(p.value)}>
                   {dental && p.germ ? (
                     <GermIcon kind={p.germ} className={styles[p.tone]} />
                   ) : (
                     <SpriteIcon mask={p.mask} className={styles[p.tone]} />
                   )}
-                  <span>= {p.label}</span>
+                  <span>= {p.value === null ? `${num(UFO_POINTS[0])} – ${num(UFO_POINTS[UFO_POINTS.length - 1])}` : num(p.value)}</span>
                 </li>
               ))}
             </ul>

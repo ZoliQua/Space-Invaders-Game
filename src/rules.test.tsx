@@ -74,8 +74,13 @@ describe('Space Invaders rules dialog', () => {
     render(<SpaceInvadersGame />);
     openRules();
     const img = within(rulesDialog()).getByRole('img', { name: /Ábra/ });
-    expect(img.textContent).toContain(formatNumber(ALIEN_POINTS.squid, 'hu'));
-    expect(img.textContent).toContain(formatNumber(ALIEN_POINTS.octopus, 'hu'));
+    const n = (v: number) => formatNumber(v, 'hu');
+    expect(img.getAttribute('aria-label')).toBe(
+      `Ábra: pont soronként. Felső sor, tintahal, ${n(ALIEN_POINTS.squid)} pont. Következő két sor, rák, ${n(ALIEN_POINTS.crab)} pont. ` +
+        `Alsó két sor, polip, ${n(ALIEN_POINTS.octopus)} pont. Rejtélyes ufó, ${n(UFO_POINTS[0])}–${n(UFO_POINTS[UFO_POINTS.length - 1])} pont.`,
+    );
+    expect(img.textContent).toContain(`= ${n(ALIEN_POINTS.squid)}`);
+    expect(img.textContent).toContain(`= ${n(ALIEN_POINTS.octopus)}`);
   });
 
   it('keeps the run when the language changes inside the rules', () => {
@@ -92,5 +97,15 @@ describe('Space Invaders rules dialog', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Schließen' }));
     expect(screen.getByRole('dialog', { name: 'Pausiert' })).toBeTruthy();
     expect(screen.getByText('Welle').parentElement!.textContent).toBe(waveBefore!.replace('Hullám', 'Welle'));
+  });
+
+  it('the Points legend shows the scoring constants', () => {
+    render(<SpaceInvadersGame />);
+    const n = (v: number) => formatNumber(v, 'hu');
+    const legend = screen.getByRole('heading', { level: 2, name: 'Pontok' }).parentElement!.textContent ?? '';
+    expect(legend).toContain(`= ${n(ALIEN_POINTS.squid)}`);
+    expect(legend).toContain(`= ${n(ALIEN_POINTS.crab)}`);
+    expect(legend).toContain(`= ${n(ALIEN_POINTS.octopus)}`);
+    expect(legend).toContain(`= ${n(UFO_POINTS[0])} – ${n(UFO_POINTS[UFO_POINTS.length - 1])}`);
   });
 });
